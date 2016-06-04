@@ -200,8 +200,9 @@ void LargeSquare64x64Transformer::TransformCanvas::SetPixel(int x, int y, uint8_
   if (x < 0 || x >= width() || y < 0 || y >= height()) return;
   // We have up to column 64 one direction, then folding around. Lets map
   if (y > 31) {
-    x = 127 - x;
-    y = 63 - y;
+    y = y - 32;
+  } else {
+    x = 64 + x;
   }
   delegatee_->SetPixel(x, y, red, green, blue);
 }
