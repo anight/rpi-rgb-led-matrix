@@ -3,7 +3,7 @@
 # So
 #   -lrgbmatrix
 ##
-OBJECTS=gpio.o led-matrix.o framebuffer.o thread.o bdf-font.o graphics.o transformer.o led-matrix-c.o
+OBJECTS=gpio-h3.o led-matrix.o framebuffer.o thread.o bdf-font.o graphics.o transformer.o led-matrix-c.o
 TARGET=librgbmatrix
 
 ###
@@ -37,7 +37,7 @@ DEFINES+=-DSHOW_REFRESH_RATE
 # the frame-rate.
 # Sometimes, you even have to give RGB_SLOWDOWN_GPIO=2 for particularly slow
 # panels or bad signal cable situations.
-DEFINES+=-DRGB_SLOWDOWN_GPIO=1
+#DEFINES+=-DRGB_SLOWDOWN_GPIO=1
 
 # ------------ Pinout options; usually no change needed here --------------
 
@@ -77,6 +77,8 @@ DEFINES+=-DRGB_SLOWDOWN_GPIO=1
 # This option is typically _not_ needed, only use when you attempt to connect
 # some oddball old (typically one-colored) display, such as Hub12.
 #DEFINES+=-DONLY_SINGLE_SUB_PANEL
+
+DEFINES+=-DH3
 
 INCDIR=../include
 CXXFLAGS=-Wall -O3 -g -fPIC $(DEFINES)

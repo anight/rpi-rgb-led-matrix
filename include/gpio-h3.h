@@ -13,12 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://gnu.org/licenses/gpl-2.0.txt>
 
-#ifndef RPI_GPIO_H
-#define RPI_GPIO_H
-
-#ifdef H3
-#include "gpio-h3.h"
-#else
+#ifndef RPI_GPIO_H3_H
+#define RPI_GPIO_H3_H
 
 #include <stdint.h>
 
@@ -27,6 +23,25 @@
 // Putting this in our namespace to not collide with other things called like
 // this.
 namespace rgb_matrix {
+
+struct h3_gpio_bank {
+  uint32_t cfg[4];
+  uint32_t dat;
+  uint32_t drv[2];
+  uint32_t pull[2];
+};
+
+struct h3_hstimer_regs {
+  uint32_t tmr_irq_en_reg;
+  uint32_t tmr_irq_stas_reg;
+  uint32_t tmr_reserved01[2];
+  uint32_t tmr_ctrl_reg;
+  uint32_t tmr_intv_lo_reg;
+  uint32_t tmr_intv_hi_reg;
+  uint32_t tmr_curnt_lo_reg;
+  uint32_t tmr_curnt_hi_reg;
+};
+
 // For now, everything is initialized as output.
 class GPIO {
  public:
@@ -46,42 +61,86 @@ class GPIO {
   // Set the bits that are '1' in the output. Leave the rest untouched.
   inline void SetBits(uint32_t value) {
     if (!value) return;
-    *gpio_set_bits_ = value;
-#ifdef RGB_SLOWDOWN_GPIO
-    *gpio_set_bits_ = value;
-#  if RGB_SLOWDOWN_GPIO > 1
-    *gpio_set_bits_ = value;   // for really slow cases
-#  endif
-#endif
+
+    uint32_t porta_value = (value >> porta_shift_) & porta_mask_;
+    if (porta_value) {
+      gpio_ports_[0 /* A */].dat |= porta_value;
+    }
+
+    uint32_t portc_value = (value >> portc_shift_) & portc_mask_;
+    if (portc_value) {
+      gpio_ports_[2 /* C */].dat |= portc_value;
+    }
+
+    uint32_t portd_value = (value >> portd_shift_) & portd_mask_;
+    if (portd_value) {
+      gpio_ports_[3 /* D */].dat |= portd_value;
+    }
+
+    uint32_t portg_value = (value >> portg_shift_) & portg_mask_;
+    if (portg_value) {
+      gpio_ports_[6 /* G */].dat |= portg_value;
+    }
   }
 
   // Clear the bits that are '1' in the output. Leave the rest untouched.
   inline void ClearBits(uint32_t value) {
     if (!value) return;
-    *gpio_clr_bits_ = value;
-#ifdef RGB_SLOWDOWN_GPIO
-    *gpio_clr_bits_ = value;
-#  if RGB_SLOWDOWN_GPIO > 1
-    *gpio_clr_bits_ = value;  // for really slow cases
-#  endif
-#endif
+
+    uint32_t porta_value = (value >> porta_shift_) & porta_mask_;
+    if (porta_value) {
+      gpio_ports_[0 /* A */].dat &= ~porta_value;
+    }
+
+    uint32_t portc_value = (value >> portc_shift_) & portc_mask_;
+    if (portc_value) {
+      gpio_ports_[2 /* C */].dat &= ~portc_value;
+    }
+
+    uint32_t portd_value = (value >> portd_shift_) & portd_mask_;
+    if (portd_value) {
+      gpio_ports_[3 /* D */].dat &= ~portd_value;
+    }
+
+    uint32_t portg_value = (value >> portg_shift_) & portg_mask_;
+    if (portg_value) {
+      gpio_ports_[6 /* G */].dat &= ~portg_value;
+    }
   }
 
   // Write all the bits of "value" mentioned in "mask". Leave the rest untouched.
   inline void WriteMaskedBits(uint32_t value, uint32_t mask) {
-    // Writing a word is two operations. The IO is actually pretty slow, so
-    // this should probably  be unnoticable.
     ClearBits(~value & mask);
     SetBits(value & mask);
   }
 
   inline void Write(uint32_t value) { WriteMaskedBits(value, output_bits_); }
 
+  inline void StartTimer(unsigned ns) {
+    hstimer_regs_->tmr_intv_lo_reg = ns;
+    hstimer_regs_->tmr_ctrl_reg = 0b10000011;
+  }
+
+  inline void WaitTimer() {
+    while ((hstimer_regs_->tmr_ctrl_reg & 1) != 0);
+  }
+
  private:
   uint32_t output_bits_;
-  volatile uint32_t *gpio_port_;
-  volatile uint32_t *gpio_set_bits_;
-  volatile uint32_t *gpio_clr_bits_;
+  volatile struct h3_gpio_bank *gpio_ports_;
+  volatile struct h3_hstimer_regs *hstimer_regs_;
+
+  /* xxx: keep in sync with union IoBits layout from framebuffer-internal.h */
+  static const uint32_t porta_mask_  = 0x0307fcf;
+  static const uint32_t porta_shift_ = 0;
+  static const uint32_t portc_mask_  = 0x000009f;
+  static const uint32_t portc_shift_ = 15;
+  static const uint32_t portd_mask_  = 0x0004000;
+  static const uint32_t portd_shift_ = 27 - 14;
+  static const uint32_t portg_mask_  = 0x00003c0;
+  static const uint32_t portg_shift_ = 23 - 6;
+
+  void ConfOutput_(unsigned pin);
 };
 
 // A PinPulser is a utility class that pulses a GPIO pin. There can be various
@@ -107,7 +166,4 @@ public:
 };
 
 }  // end namespace rgb_matrix
-
-#endif  // H3
-
 #endif  // RPI_GPIO_H

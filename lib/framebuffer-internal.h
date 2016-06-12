@@ -167,6 +167,41 @@ private:
     uint32_t raw;
     IoBits() : raw(0) {}
   };
+#elif defined(H3)
+  // Orange Pi Lite, Orange Pi One, Orange Pi PC and may be others
+  union IoBits {
+    struct {
+      unsigned int p0_g1              : 1;  // 0    PA00
+      unsigned int clock              : 1;  // 1    PA01
+      unsigned int d                  : 1;  // 2    PA02
+      unsigned int a                  : 1;  // 3    PA03
+      unsigned int unused_4_5         : 2;  // 4..5
+      unsigned int strobe             : 1;  // 6    PA06
+      unsigned int p1_g1              : 1;  // 7    PA07
+      unsigned int p1_b1              : 1;  // 8    PA08
+      unsigned int p1_g2              : 1;  // 9    PA09
+      unsigned int p1_r2              : 1;  // 10   PA10
+      unsigned int p2_b1              : 1;  // 11   PA11
+      unsigned int p2_g1              : 1;  // 12   PA12
+      unsigned int p2_r1              : 1;  // 13   PA13
+      unsigned int e                  : 1;  // 14   PA14
+      unsigned int p0_b2              : 1;  // 15        PC00
+      unsigned int p0_g2              : 1;  // 16        PC01
+      unsigned int p0_r1              : 1;  // 17        PC02
+      unsigned int p0_r2              : 1;  // 18        PC03
+      unsigned int b                  : 1;  // 19        PC04
+      unsigned int p2_r2              : 1;  // 20   PA20
+      unsigned int p0_b1              : 1;  // 21   PA21
+      unsigned int c                  : 1;  // 22        PC07
+      unsigned int p1_b2              : 1;  // 23                  PG06
+      unsigned int p2_b2              : 1;  // 24                  PG07
+      unsigned int p1_r1              : 1;  // 25                  PG08
+      unsigned int p2_g2              : 1;  // 26                  PG09
+      unsigned int output_enable      : 1;  // 27             PD14
+    } bits;
+    uint32_t raw;
+    IoBits() : raw(0) {}
+  };
 #else
   // Standard pinout since July 2015
   // This uses the PWM pin to create the timing.
