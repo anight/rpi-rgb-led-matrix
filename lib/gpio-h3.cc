@@ -128,6 +128,10 @@ uint32_t GPIO::InitOutputs(uint32_t outputs) {
       ConfOutput_(pins[b]);
     }
   }
+  porta_value = gpio_ports_[0 /* A */].dat;
+  portc_value = gpio_ports_[2 /* C */].dat;
+  portd_value = gpio_ports_[3 /* D */].dat;
+  portg_value = gpio_ports_[6 /* G */].dat;
   return output_bits_;
 }
 

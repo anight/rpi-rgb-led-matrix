@@ -42,6 +42,13 @@ struct h3_hstimer_regs {
   uint32_t tmr_curnt_hi_reg;
 };
 
+enum {
+  porta = 0,
+  portc = 2,
+  portd = 3,
+  portg = 6
+};
+
 // For now, everything is initialized as output.
 class GPIO {
  public:
@@ -58,60 +65,62 @@ class GPIO {
   // Returns the bits that are actually set.
   uint32_t InitOutputs(uint32_t outputs);
 
+#define port_set_bits(name) do { \
+    uint32_t name##_bits = (value >> name##_shift_) & name##_mask_; \
+    uint32_t name##_new_value = name##_value | name##_bits; \
+    if (name##_new_value != name##_value) { \
+      gpio_ports_[name].dat = name##_new_value; \
+      name##_value = name##_new_value; \
+    } \
+} while (0)
+
+#define port_clear_bits(name) do { \
+    uint32_t name##_bits = (value >> name##_shift_) & name##_mask_; \
+    uint32_t name##_new_value = name##_value & ~name##_bits; \
+    if (name##_new_value != name##_value) { \
+      gpio_ports_[name].dat = name##_new_value; \
+      name##_value = name##_new_value; \
+    } \
+} while (0)
+
+#define port_write_bits(name) do { \
+    uint32_t name##_mask_bits = (mask >> name##_shift_) & name##_mask_; \
+    uint32_t name##_value_bits = (value >> name##_shift_) & name##_mask_; \
+    uint32_t name##_new_value = (name##_value & ~name##_mask_bits) | name##_value_bits; \
+    if (name##_new_value != name##_value) { \
+      gpio_ports_[name].dat = name##_new_value; \
+      name##_value = name##_new_value; \
+    } \
+} while (0)
+
   // Set the bits that are '1' in the output. Leave the rest untouched.
   inline void SetBits(uint32_t value) {
     if (!value) return;
 
-    uint32_t porta_value = (value >> porta_shift_) & porta_mask_;
-    if (porta_value) {
-      gpio_ports_[0 /* A */].dat |= porta_value;
-    }
-
-    uint32_t portc_value = (value >> portc_shift_) & portc_mask_;
-    if (portc_value) {
-      gpio_ports_[2 /* C */].dat |= portc_value;
-    }
-
-    uint32_t portd_value = (value >> portd_shift_) & portd_mask_;
-    if (portd_value) {
-      gpio_ports_[3 /* D */].dat |= portd_value;
-    }
-
-    uint32_t portg_value = (value >> portg_shift_) & portg_mask_;
-    if (portg_value) {
-      gpio_ports_[6 /* G */].dat |= portg_value;
-    }
+    port_set_bits(porta);
+    port_set_bits(portc);
+    port_set_bits(portd);
+    port_set_bits(portg);
   }
 
   // Clear the bits that are '1' in the output. Leave the rest untouched.
   inline void ClearBits(uint32_t value) {
     if (!value) return;
 
-    uint32_t porta_value = (value >> porta_shift_) & porta_mask_;
-    if (porta_value) {
-      gpio_ports_[0 /* A */].dat &= ~porta_value;
-    }
-
-    uint32_t portc_value = (value >> portc_shift_) & portc_mask_;
-    if (portc_value) {
-      gpio_ports_[2 /* C */].dat &= ~portc_value;
-    }
-
-    uint32_t portd_value = (value >> portd_shift_) & portd_mask_;
-    if (portd_value) {
-      gpio_ports_[3 /* D */].dat &= ~portd_value;
-    }
-
-    uint32_t portg_value = (value >> portg_shift_) & portg_mask_;
-    if (portg_value) {
-      gpio_ports_[6 /* G */].dat &= ~portg_value;
-    }
+    port_clear_bits(porta);
+    port_clear_bits(portc);
+    port_clear_bits(portd);
+    port_clear_bits(portg);
   }
 
   // Write all the bits of "value" mentioned in "mask". Leave the rest untouched.
   inline void WriteMaskedBits(uint32_t value, uint32_t mask) {
-    ClearBits(~value & mask);
-    SetBits(value & mask);
+    if (!mask) return;
+
+    port_write_bits(porta);
+    port_write_bits(portc);
+    port_write_bits(portd);
+    port_write_bits(portg);
   }
 
   inline void Write(uint32_t value) { WriteMaskedBits(value, output_bits_); }
@@ -139,6 +148,11 @@ class GPIO {
   static const uint32_t portd_shift_ = 27 - 14;
   static const uint32_t portg_mask_  = 0x00003c0;
   static const uint32_t portg_shift_ = 23 - 6;
+
+  uint32_t porta_value;
+  uint32_t portc_value;
+  uint32_t portd_value;
+  uint32_t portg_value;
 
   void ConfOutput_(unsigned pin);
 };
