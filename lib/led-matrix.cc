@@ -56,11 +56,11 @@ public:
   }
 
   virtual void Run() {
-    while (running()) {
 #ifdef SHOW_REFRESH_RATE
-      struct timeval start, end;
-      gettimeofday(&start, NULL);
+    time_t this_second = 0;
+    int fps_this_second = 0;
 #endif
+    while (running()) {
 
       current_frame_->framebuffer()->DumpToMatrix(io_);
 
@@ -74,10 +74,16 @@ public:
       }
 
 #ifdef SHOW_REFRESH_RATE
-      gettimeofday(&end, NULL);
-      int64_t usec = ((uint64_t)end.tv_sec * 1000000 + end.tv_usec)
-        - ((int64_t)start.tv_sec * 1000000 + start.tv_usec);
-      printf("\b\b\b\b\b\b\b\b%6.1fHz", 1e6 / usec);
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      if (now.tv_sec != this_second) {
+        if (this_second != 0) {
+          printf("\r%dHz    ", fps_this_second); fflush(stdout);
+        }
+        fps_this_second = 0;
+        this_second = now.tv_sec;
+      }
+      fps_this_second ++;
 #endif
     }
   }
