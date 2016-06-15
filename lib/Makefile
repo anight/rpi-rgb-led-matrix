@@ -21,7 +21,7 @@ TARGET=librgbmatrix
 #DEFINES+=-DRGB_SWAP_GREEN_BLUE
 
 # For curiosity reasons: uncomment to see refresh rate in terminal.
-#DEFINES+=-DSHOW_REFRESH_RATE
+DEFINES+=-DSHOW_REFRESH_RATE
 
 # The signal can be too fast for some LED panels, in particular with newer
 # (faster) Raspberry Pi 2s.
