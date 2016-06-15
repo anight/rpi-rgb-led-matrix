@@ -152,7 +152,7 @@ void RGBMatrix::SetGPIO(GPIO *io, bool start_thread) {
     //   core #3 will succeed.
     // The Raspberry Pi1 only has one core, so this affinity
     //   call will simply fail and we keep using the only core.
-    updater_->Start(99, (1<<3));  // Prio: high. Also: put on last CPU.
+    updater_->Start(0, (1<<3));  // Prio: Normal. Also: put on last CPU.
   }
 }
 
